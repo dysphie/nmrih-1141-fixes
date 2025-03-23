@@ -1,0 +1,62 @@
+"Games"
+{
+	"nmrih"
+	{
+		"Signatures"
+		{
+			"CNMRiH_BaseZombie::CanAttackEntity"
+			{
+				"library"		"server"
+				"linux"         "@_ZN17CNMRiH_BaseZombie15CanAttackEntityEP11CBaseEntityP10CGameTrace"
+				"windows"		"\x53\x8B\xDC\x83\xEC\x08\x83\xE4\xF0\x83\xC4\x04\x55\x8B\x6B\x04\x89\x6C\x24\x04\x8B\xEC\x81\xEC\xD8\x00\x00\x00\x56\x57\x8B\x7B\x08"
+			}
+
+			"CFilterName::PassesFilterImpl"
+			{
+				"library"	"server"
+				"linux"		"@_ZN11CFilterName16PassesFilterImplEP11CBaseEntityS1_"
+				"windows"	"\x55\x8B\xEC\x83\x7D\x08\x00\x53\x56\x8B\xD9\x74\x2A\x8B\x75\x0C"
+			}
+		}
+
+		"Keys"
+		{
+			"IsLinux"
+			{
+				"windows"	"0"
+				"linux"		"1"
+			}
+		}
+
+		"Offsets"
+		{
+			"CNMRiH_BaseZombie::IsCrawler"
+			{
+				"linux"		"3787"
+				"windows"	"3763"
+			}
+		}
+
+		"Functions"
+		{
+			"CNMRiH_BaseZombie::CanAttackEntity"
+			{
+				"signature"  "CNMRiH_BaseZombie::CanAttackEntity"
+				"callconv"  "thiscall"
+				"return"  "bool"
+				"this"  "entity"
+				"arguments"
+				{
+					"pEntity"
+					{
+						"type"  "cbaseentity"
+					}
+					"pTraceResult"
+					{
+						"type"  "objectptr"
+					}
+				}
+			}
+		}
+	}
+}
