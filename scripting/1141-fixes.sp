@@ -211,7 +211,7 @@ void PatchByte(Address addr, int offset, int verify, int patch)
 	int original = LoadFromAddress(addr + view_as<Address>(offset), NumberType_Int8);
 	if (original != verify && original != patch)
 	{
-		SetFailState("Expected byte %x, got %x", verify, patch, original);
+		SetFailState("Expected byte %x, got %x", verify, original);
 		return;
 	}
 
