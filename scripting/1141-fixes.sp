@@ -11,8 +11,8 @@ public Plugin myinfo =
 {
 	name = "1.14.1 Hotfixes",
 	author = "Dysphie & Felis",
-	description = "Fixes immortal zombies and bulleyes in 1.14.1",
-	version = "1.0.0",
+	description = "Fixes a bunch of regressions introduced in 1.14.1",
+	version = "1.0.1",
 	url = ""
 };
 
@@ -20,13 +20,47 @@ int offset_IsCrawler;
 Address fn_PassesFilterImpl;
 bool g_IsLinux;
 
+ConVar hotfix_damage_filters;
+ConVar hotfix_zombie_attack_bulleye;
+ConVar hotfix_fmod_sounds;
+
 public void OnPluginStart()
+{
+	CheckPipebombFuse();
+
+	hotfix_zombie_attack_bulleye = CreateConVar("hotfix_zombie_attack_bulleye", "1", "Fixes zombies not attacking bullseyes");
+	hotfix_fmod_sounds = CreateConVar("hotfix_fmod_sounds", "1", "Fixes clients not hearing FMOD sounds");
+	hotfix_damage_filters = CreateConVar("hotfix_damage_filters", "1", "Fixes damage filters not working correctly");
+	hotfix_damage_filters.AddChangeHook(OnHotfixDamageFiltersChanged);
+
+	AutoExecConfig(true, "1141-fixes.cfg");
+
+	DoGameDataStuff();
+	PatchNameFilter();
+}
+
+void OnHotfixDamageFiltersChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	bool enabled = !StrEqual(newValue, "0");
+	if (enabled) PatchNameFilter();
+	else UnpatchNameFilter();
+}
+
+public void OnConfigsExecuted()
+{
+	if (hotfix_damage_filters.BoolValue) PatchNameFilter();
+}
+
+void CheckPipebombFuse()
 {
 	ConVar version = FindConVar("nmrih_version");
 	char versionStr[16];
 	version.GetString(versionStr, sizeof(versionStr));
 	if (!StrEqual(versionStr, "1.14.1")) SetFailState("This plugin is only needed in 1.14.1. You're in version %s", versionStr);
+}
 
+void DoGameDataStuff()
+{
 	GameData gamedata = new GameData(GAMEDATA_FILE);
 	if (!gamedata) SetFailState("Failed to find gamedata/" ... GAMEDATA_FILE ... ".txt");
 	
@@ -43,9 +77,6 @@ public void OnPluginStart()
 	char isLinux[2];
 	gamedata.GetKeyValue("IsLinux", isLinux, sizeof(isLinux));
 	g_IsLinux = StrEqual(isLinux, "1");
-
-	PatchNameFilter();
-	PrintToServer("Enabled 1.14.1 hotfixes");
 	
 	delete gamedata;
 }
@@ -54,6 +85,14 @@ public void OnPluginEnd()
 {
 	UnpatchNameFilter();
 	PrintToServer("Disabled 1.14.1 hotfixes");
+}
+
+// Fix clients not playing FMOD sounds
+public void OnClientConnected(int client)
+{
+	if (hotfix_fmod_sounds.BoolValue) {
+		ClientCommand(client, "cl_soundscape_flush");
+	}
 }
 
 void PatchNameFilter()
@@ -70,6 +109,8 @@ void PatchNameFilter()
 		PatchByte(fn_PassesFilterImpl, 11, 0x74, NOP);
 		PatchByte(fn_PassesFilterImpl, 12, 0x72, NOP);
 	}
+
+	PrintToServer("[1.14.1 Hotfixes] Patched damage filters");
 }
 
 void UnpatchNameFilter()
@@ -84,10 +125,14 @@ void UnpatchNameFilter()
 		PatchByte(fn_PassesFilterImpl, 11, NOP, 0x74);
 		PatchByte(fn_PassesFilterImpl, 12, NOP, 0x72);
 	}
+
+	PrintToServer("[1.14.1 Hotfixes] Unpatched damage filters");
 }
 
 MRESReturn Detour_CanAttackEntity(int zombie, DHookReturn ret, DHookParam params)
 {
+	if (!hotfix_zombie_attack_bulleye.BoolValue) return MRES_Ignored;
+
 	int target = params.Get(1);
 	if (target == -1) return MRES_Ignored;
 	
