@@ -110,7 +110,6 @@ public void OnMapInit(const char[] mapName)
 public void OnPluginEnd()
 {
 	UnpatchNameFilter();
-	PrintToServer("Disabled 1.14.1 hotfixes");
 }
 
 // Fix clients not playing FMOD sounds
