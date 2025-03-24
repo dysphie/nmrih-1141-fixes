@@ -1,5 +1,6 @@
 #include <sourcemod>
 #include <dhooks>
+#include <entitylump>
 
 #define GAMEDATA_FILE "1141-fixes.games"
 
@@ -19,6 +20,7 @@ public Plugin myinfo =
 int offset_IsCrawler;
 Address fn_PassesFilterImpl;
 bool g_IsLinux;
+bool g_MapUsesFmod;
 
 ConVar hotfix_damage_filters;
 ConVar hotfix_zombie_attack_bulleye;
@@ -81,6 +83,30 @@ void DoGameDataStuff()
 	delete gamedata;
 }
 
+public void OnMapInit(const char[] mapName)
+{
+	g_MapUsesFmod = false;
+
+	int entityCount = EntityLump.Length();
+	for (int i = 0; i < entityCount; i++)
+	{
+		EntityLumpEntry entry = EntityLump.Get(i);
+
+		char className[64];
+		if (entry.GetNextKey("classname", className, sizeof(className)) != -1)
+		{
+			if (StrEqual(className, "ambient_fmod", false))
+			{
+				g_MapUsesFmod = true;
+				delete entry;
+				break;
+			}
+		}
+
+		delete entry;
+	}
+}
+
 public void OnPluginEnd()
 {
 	UnpatchNameFilter();
@@ -90,7 +116,7 @@ public void OnPluginEnd()
 // Fix clients not playing FMOD sounds
 public void OnClientConnected(int client)
 {
-	if (hotfix_fmod_sounds.BoolValue) {
+	if (g_MapUsesFmod && hotfix_fmod_sounds.BoolValue) {
 		ClientCommand(client, "cl_soundscape_flush");
 	}
 }
@@ -178,7 +204,7 @@ bool TraceFilter_IgnoreOne(int entity, int contentsMask, int ignore)
 
 bool IsZombieCrawler(int zombie)
 {
-    return GetEntData(zombie, offset_IsCrawler, 1) != 0;
+	return GetEntData(zombie, offset_IsCrawler, 1) != 0;
 }
 
 void PatchByte(Address addr, int offset, int verify, int patch)
